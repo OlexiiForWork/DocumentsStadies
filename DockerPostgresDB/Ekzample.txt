@@ -1,0 +1,13 @@
+1)создание volume для базы postgres
+$ docker volume create pgdata
+
+2) загрузка образа postgres
+Для подключения локально вместо localhost нужно использовать host.docker.internal
+ -e POSTGRES_PASSWORD=oleksii  пароль
+ -e POSTGRES_USER=oleksii      пользователь
+ -e POSTGRES_DB=postgres       база
+ -p 5433:5432                  переадресацыя портов
+ --restart=always              перезапуск контейнера всегда ( конфликт с  --rm)
+ --rm                          Automatically remove the container when it exits
+$ docker run -it --rm -v pgdata:/var/lib/postgresql/data -e POSTGRES_PASSWORD=oleksii -e POSTGRES_USER=oleksii -e POSTGRES_DB=postgres -p 5433:5432 postgres:12.8
+$ docker run -it --restart=always -v pgdata:/var/lib/postgresql/data -e POSTGRES_PASSWORD=oleksii -e POSTGRES_USER=oleksii -e POSTGRES_DB=postgres -p 5433:5432 postgres:12.8

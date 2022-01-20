@@ -1,0 +1,10 @@
+$ docker volume create --driver local  --opt device=/dev/sda2 foo
+
+$ docker inspect pgdata
+
+| Command	            |   Description                                         |
+| docker volume create  |	Create a volume                                     |
+| docker volume inspect |	Display detailed information on one or more volumes |
+| docker volume ls      |	List volumes                                        |
+| docker volume prune   |	Remove all unused local volumes                     |
+| docker volume rm      |	Remove one or more volumes                          |
