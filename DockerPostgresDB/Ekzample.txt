@@ -3,6 +3,7 @@ $ docker volume create pgdata
 
 2) загрузка образа postgres
 Для подключения локально вместо localhost нужно использовать host.docker.internal
+ -v pgdata:/var/lib/postgresql/data поделюченный volume 
  -e POSTGRES_PASSWORD=oleksii  пароль
  -e POSTGRES_USER=oleksii      пользователь
  -e POSTGRES_DB=postgres       база
