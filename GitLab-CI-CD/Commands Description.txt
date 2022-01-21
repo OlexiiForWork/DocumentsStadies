@@ -1,0 +1,707 @@
+# tags                                  Список тегов, которые используются для выбора бегуна. !!!!!Непонял как использовать
+# image                                 Используемый образ Docker.
+# script                                Сценарий выполняемого кода.
+# allow_failure:                        Разрешить падение для джобы.....
+    # true                                  для любой джобы
+    # exit_codes: 137                       Разришоный код для джобы при падении
+# stage                                 Определяет этап работы.
+# artifacts:                            Сюда относятся файлы 
+    # paths:                                Что загружать
+    #  - mycv.pdf      
+    #  - binaries/
+    # expire_in: 1 week                     Через сколько времени будет удален файл
+    # exclude:                              Что незагружать
+    #  - binaries/**/*.o
+    # expose_as: 'artifact 1'               Дать название артифакту
+    # untracked: true                       Не отслежывать стандартные файлы....
+# environment:                          Для определения бистрого доступа к задеплоеным джобам
+    # name: nameEnvironment                 Имя джобы      [Operations/environments]
+    # есть дополнительные команды на дествие
+# trigger:                              Определяет триггер нисходящего pipeline. дочернего
+    # include: .gitlab-ci-service.yml       Имя файла с описанием доченего pipeline.
+# variables:                            Переменные на уровне pipeline.
+    # RUN_PROJECTS: $RUN_PROJECTS           Пример переменой
+# only: или except:                     Установить контроль, откуда создаються пайплайн. Или исключить.....
+    # - branches                            Когда ссылка Git на конвейер является ветвью.
+    # - tags                                Когда ссылка Git для конвейера является тегом.
+    # - web                                 Для конвейеров, созданных путем выбора «Запустить конвейер» 
+    #                                            в пользовательском интерфейсе GitLab,
+    #                                            в разделе проекта CI/CD > Конвейеры.
+    # есть дополнительные атрибуты
+# rules:                                Список условий для оценки и определения выбранных атрибутов задания,
+#                                           а также того, создано оно или нет.
+    #         Пример блока правил запуска !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    # - if: '$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME =~ /^feature/ && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME != $CI_DEFAULT_BRANCH'
+    #   when: never
+    # - if: '$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME =~ /^feature/'
+    #   when: manual
+    #   allow_failure: true
+    # - if: '$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME'
+# when:                                 Когда запускать в работу Джобу.
+    # on_success (default)                  Запускайте задание только в том случае, если все задания на более ранних этапах 
+    #                                          завершились успешно или имеют значение allow_failure: true.
+    # manual                                Выполнять только задание только по команде пользователя.
+    # always                                Запускайте задание независимо от состояния заданий на более ранних этапах.
+    # on_failure                            Запускайте задание только в случае сбоя хотя бы одного задания на более раннем этапе.
+    # delayed                               Задержка выполнения задания на указанное время.
+    # never                                 Не запускайте работу.
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#Основной файл [.gitlab-ci.yml]
+
+stages: #( Описание стадий работы в пайп лайне Джоба )
+  - run  #( Имя станий [1])
+  
+    
+run service: #( Название Джоба ) 
+  stage: run #( асоциируется с [1] ) 
+  trigger:
+    include: .gitlab-ci-service.yml
+  variables:
+    RUN_PROJECTS: $RUN_PROJECTS    
+  only:
+   - web
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# Файл для подключения [.gitlab-ci-service.yml]
+
+ image: gitlab-registry.nordstrom.com/cicd/gitlab-shared-runner/docker:stable
+services:
+  - gitlab-registry.nordstrom.com/cicd/gitlab-shared-runner/docker:dind
+
+stages:
+  - definition-project-files
+  - service-build-test
+  - create-ecr
+  - build-push-docker-image
+  - create-aws-service
+
+variables:
+  GIT_DEPTH: 0
+  
+  paramAwsProfile: arnawsiam217579517876role217579517876niuassumerole
+  paramProdAwsProfile: arnawsiam238469686232roleniuassumerole
+  paramAwsRegion: us-west-2
+  AWS_PROFILE: arnawsiam[rolename]
+  AWS_HOST: 217579517876.dkr.ecr.us-west-2.amazonaws.com
+  AWS_CLUSTER_NAME: Themis
+  AWS_APPLICATION_BALANCER_LISTENER_ARN_DEV: arn:aws:elasticloadbalancing:us-west-2:217579517876:listener/app/imt-alb/08564713021ce39e/e6e32b73151ba4bc
+  
+  DIFF_FILES: diffFiles.txt
+  AFFECTED_FILES: effectedFiles.txt
+  PROJECTS_TO_BUILD: project_to_build.txt
+  PREFIX_FOLDER: "Services"
+  RUN_PROJECTS: 1
+
+  NUGET_SERVER_URL_DEV: http://10.16.14.206/nuget
+  NUGET_SERVER_URL_PROD: http://10.16.14.206:8080/nuget
+  SONAR_HOST_URL: http://10.16.14.206:8095
+  SONAR_TOKEN: fc3e259acacf9d02dd717d1bbf3ec89066da3a21
+
+  DEV_BRANCH_NAME: master
+  PRE_PRODUCTION_BRANCH_NAME: pre-production
+  PRODUCTION_BRANCH_NAME: production
+
+definition-project-files:
+  stage: definition-project-files
+  image: gitlab-registry.nordstrom.com/cicd/container-image-composer/buildtime/dotnet3_core_sdk
+  script:
+    - |
+      echo "RUN_PROJECTS $RUN_PROJECTS"
+    - git diff remotes/origin/master --name-only --no-commit-id --pretty="" | awk -F"/" '{print $1"/"$2}' | sort | uniq
+    - git diff remotes/origin/master --name-only --no-commit-id --pretty="" | awk -F"/" '{print $1"/"$2}' | sort | uniq >> "${DIFF_FILES}"
+    - | 
+      echo "AFFECTED_FILES: $RUN_PROJECTS"
+      echo "PROJECTS_TO_BUILD: $PROJECTS_TO_BUILD"
+      
+      if [[ "$RUN_PROJECTS" = "\$RUN_PROJECTS" ]] ; then
+        echo "add all folders in $PREFIX_FOLDER"
+        for d in "$PREFIX_FOLDER"/*/ ; do 
+          echo "added - $d"
+          echo "$d" >> ${AFFECTED_FILES}; 
+        done
+      else
+        echo "add any folders from $PREFIX_FOLDER"
+        for d in $RUN_PROJECTS ; do
+          
+          line=$(echo "$d" | tr -d '\011\012\013\014\015\040')
+          echo "Add value: $line"
+          
+          if [[ -d "Services/$line" ]] || [[ -d "$line" ]]
+          then
+            echo "Directory $line with/without $PREFIX_FOLDER exists."
+          else
+            echo "Error: Directory $line with/without $PREFIX_FOLDER DOSE NOT exists."
+            continue
+          fi          
+          
+          if [[ "$line" == Services/* ]] ; then
+            echo "$line" >> ${AFFECTED_FILES};
+          else
+            echo "Services/$line" >> ${AFFECTED_FILES};
+          fi;
+           
+        done
+      fi
+
+    - | 
+      if [[ -z $(grep '[^[:space:]]' $AFFECTED_FILES) ]] ; then
+        echo "There are no project to build"
+        exit 42
+      else
+        echo "File has SOME THING"
+      fi
+      
+    - cat $AFFECTED_FILES
+    - sort ${AFFECTED_FILES} | uniq | grep "^$PREFIX_FOLDER/" > ${PROJECTS_TO_BUILD}
+    - cat ${PROJECTS_TO_BUILD}      
+
+  artifacts:
+    untracked: true
+
+### SERVICE TEMPLATE
+.create-update-services-template: &create-update-services-template
+    - sourceFolder=$(pwd)
+    - |
+      while IFS= read -r line; do
+        echo "Create aws task for: $line"
+         
+        settingName=alias
+        aws_solution_alias=$(echo "$(cat $line/aws_settings.json | grep $settingName: | awk -F $settingName: '{print $2 }' | awk -F , '{print $1 }')" | tr '[:upper:]' '[:lower:]' | tr -d '" ')
+        echo "aws_solution_alias: $aws_solution_alias"
+        settingName=solutionType
+        solutionTypeValue=$(echo "$(cat $line/aws_settings.json | grep $settingName: | awk -F $settingName: '{print $2 }' | awk -F , '{print $1 }')" | tr '[:upper:]' '[:lower:]' | tr -d '" ')
+        echo "solutionTypeValue: $solutionTypeValue"
+         
+        # setup AWS VARIABLES
+        ecsServiceName=imt-$env_prefix-$aws_solution_alias
+        ecsNewRalicName=imt-$env_prefix-$aws_solution_alias
+        taskServiceName=imt-$aws_solution_alias
+        containerImageName=imt-$aws_solution_alias
+        targetGroupName=imt-$env_prefix-$aws_solution_alias-tg
+        imageContainer=$AWS_HOST/imt-$aws_solution_alias:$CI_COMMIT_SHORT_SHA
+        logGroupName=ecs/imt-$env_prefix-$aws_solution_alias
+        hostRoute53=$aws_solution_alias-$env_prefix-imt.$route53_dns
+        httpHostRoute53=$aws_solution_alias-httptmp.$env_prefix.imt.$route53_dns
+ 
+        echo "ecsServiceName: $ecsServiceName"
+        echo "taskServiceName: $taskServiceName"
+        echo "containerImageName: $containerImageName"
+        echo "targetGroupName: $targetGroupName"
+        echo "imageContainer: $imageContainer"
+        echo "logGroupName: $logGroupName"
+        echo "hostRoute53: $hostRoute53"
+        echo "httpHostRoute53: $httpHostRoute53"
+         
+        # create LOG GROUP
+        result=$(aws logs describe-log-groups --region us-west-2 --log-group-name $logGroupName --query 'logGroups')
+        if [[ $result = [] ]]; then
+          echo "Add log group: $logGroupName"
+          aws logs create-log-group --region us-west-2 --log-group-name $logGroupName
+        else
+          echo "Log exists"
+        fi
+         
+        # create AWS TASK FOR SERVICE
+        echo "Add ecs task"
+        taskDefinitionArn=$(aws ecs register-task-definition --execution-role-arn $execution_role_arn --region us-west-2 \
+          --tags key=branch,value=${CI_COMMIT_REF_SLUG} \
+          --query 'taskDefinition.taskDefinitionArn' --output text \
+          --family $taskServiceName --memory $memory_size --cpu $cpu_size --network-mode awsvpc --requires-compatibilities '[ "FARGATE" ]' \
+          --container-definitions '[ { "logConfiguration": { "logDriver": "awslogs", "options": { "awslogs-group": "'"$logGroupName"'",
+          "awslogs-region": "us-west-2", "awslogs-stream-prefix": "ecs"} },
+          "portMappings": [ { "hostPort": 80, "protocol": "tcp", "containerPort": 80 } ],
+          "cpu": 0,
+          "environment": [
+            {
+              "name": "DOTNET_ENVIRONMENT",
+              "value": "'"$DOTNET_ENVIRONMENT_value"'"
+            },
+            {
+              "name": "NEW_RELIC_APP_NAME",
+              "value": "'"$ecsNewRalicName"'"
+            }
+          ], 
+          "mountPoints": [],
+          "volumesFrom": [],
+          "secrets": [
+              {
+                "valueFrom": "/imt/'"$env_prefix"'/api/key",
+                "name": "AuditApi__ApiKey"
+              },
+              {
+                "valueFrom": "/imt/'"$env_prefix"'/api/address",
+                "name": "AuditApi__ApiLocation"
+              },
+              {
+                "valueFrom": "/imt/'"$env_prefix"'/api/nps/key",
+                "name": "NpsApi__ApiKey"
+              },
+              {
+                "valueFrom": "/imt/'"$env_prefix"'/api/nps/address",
+                "name": "NpsApi__ApiLocation"
+              },
+              {
+                "valueFrom": "/imt/'"$env_prefix"'/db/AuditDb",
+                "name": "ConnectionStrings__AuditDb"
+              },
+              {
+                "valueFrom": "/imt/'"$env_prefix"'/db/Rms14Db",
+                "name": "ConnectionStrings__Rms14Db"
+              },
+              {
+                "valueFrom": "/imt/'"$env_prefix"'/db/Sim16Db",
+                "name": "ConnectionStrings__Sim16Db"
+              },
+              {
+                "valueFrom": "/imt/'"$env_prefix"'/db/WmDb",
+                "name": "ConnectionStrings__WmDb"
+              },
+              {
+                "valueFrom": "/imt/'"$env_prefix"'/db/WCOCDb",
+                "name": "ConnectionStrings__WCOCDb"
+              },
+              {
+                "valueFrom": "/imt/'"$env_prefix"'/db/HighJumpDb",
+                "name": "ConnectionStrings__HighJumpDb"
+              },
+              {
+                "valueFrom": "/imt/'"$env_prefix"'/db/NrhlReceiptsDb",
+                "name": "ConnectionStrings__NrhlReceiptsDb"
+              },
+              {
+                "valueFrom": "/imt/'"$env_prefix"'/ExtractionRules/ServiceWaitTime",
+                "name": "ExtractionRules__ServiceWaitTime"
+              },
+              {
+                "valueFrom": "/imt/'"$env_prefix"'/BusinessIntelligenceRules/ServiceWaitTime",
+                "name": "BusinessIntelligenceRules__ServiceWaitTime"
+              },               
+              {
+                "valueFrom": "/imt/'"$env_prefix"'/NoWorkWaitTime",
+                "name": "NoWorkWaitTime"
+              },
+              {
+                "valueFrom": "/imt/'"$env_prefix"'/kafka/host",
+                "name": "KafkaPublisherConfiguration__0__HostUri"
+              },
+              {
+                "valueFrom": "/imt/'"$env_prefix"'/kafka/topic",
+                "name": "KafkaPublisherConfiguration__0__DefaultTopicName"
+              },
+              {
+                "valueFrom": "/imt/'"$env_prefix"'/kafka/user",
+                "name": "KafkaPublisherConfiguration__0__SaslUsername"
+              },
+              {
+                "valueFrom": "/imt/'"$env_prefix"'/kafka/password",
+                "name": "KafkaPublisherConfiguration__0__SaslPassword"
+              },
+              {
+                "valueFrom": "/imt/'"$env_prefix"'/kafka/schema/url",
+                "name": "KafkaPublisherConfiguration__0__AvroSchemaRegistry__SchemaRegistryUrl"
+              },
+              {
+                "valueFrom": "/imt/'"$env_prefix"'/kafka/schema/auth",
+                "name": "KafkaPublisherConfiguration__0__AvroSchemaRegistry__SchemaRegistryBasicAuthUserInfo"
+              },
+              {
+                "valueFrom": "/imt/'"$env_prefix"'/kafka/host",
+                "name": "Kafka__Consumer__BootstrapServers"
+              },
+              {
+                "valueFrom": "/imt/'"$env_prefix"'/kafka/consumer/topic",
+                "name": "Kafka__Consumer__Topic"
+              },
+              {
+                "valueFrom": "/imt/'"$env_prefix"'/kafka/user",
+                "name": "Kafka__Consumer__SaslUsername"
+              },
+              {
+                "valueFrom": "/imt/'"$env_prefix"'/kafka/password",
+                "name": "Kafka__Consumer__SaslPassword"
+              },
+              {
+                "valueFrom": "/imt/'"$env_prefix"'/kafka/schema/url",
+                "name": "Kafka__SchemaRegistry__Url"
+              },
+              {
+                "valueFrom": "/imt/'"$env_prefix"'/kafka/schema/auth",
+                "name": "Kafka__SchemaRegistry__BasicAuthUserInfo"
+              },
+              {
+                "valueFrom": "/imt/'"$env_prefix"'/log/splunk/host",
+                "name": "Serilog__WriteTo__1__Args__SplunkHost"
+              },
+              {
+                "valueFrom": "/imt/'"$env_prefix"'/log/splunk/index",
+                "name": "Serilog__WriteTo__1__Args__Index"
+              },
+              {
+                "valueFrom": "/imt/'"$env_prefix"'/log/splunk/token",
+                "name": "Serilog__WriteTo__1__Args__EventCollectorToken"
+              },
+              {
+                "valueFrom": "/imt/'"$env_prefix"'/log/newrelic/key",
+                "name": "NEW_RELIC_LICENSE_KEY"
+              },
+              {
+                "valueFrom": "/imt/'"$env_prefix"'/serilog/minimumLevel/default",
+                "name": "Serilog__MinimumLevel__Default"
+              }
+            ],
+          "image": "'"$imageContainer"'",
+          "essential": true,
+          "name": "'"$containerImageName"'"
+          } ]')
+         
+        countOfServices=`aws ecs describe-services --region us-west-2 --cluster $AWS_CLUSTER_NAME --services $ecsServiceName \
+          --query 'length(services[?status=='"'ACTIVE'"']) '`
+        echo "Count of services: $countOfServices"
+         
+        if [[ $countOfServices == 1 ]]; then
+          # UPDATE EXISTS AWS SERVICE
+          echo "Ecs service $ecsServiceName is exists. Update service ecs $ecsServiceName."
+          aws ecs update-service --region us-west-2 --cluster $AWS_CLUSTER_NAME --service $ecsServiceName --task-definition $taskDefinitionArn \
+            --desired-count 1 --force-new-deployment
+        else
+           
+          if [[ $solutionTypeValue == "console" ]]; then
+            # create AWS SERVICE
+            echo "Create console ECS service: $ecsServiceName"
+            aws ecs create-service --region us-west-2 \
+              --cluster $AWS_CLUSTER_NAME \
+              --service-name $ecsServiceName \
+              --task-definition $taskDefinitionArn \
+              --launch-type FARGATE \
+              --network-configuration $network_configuration \
+              --desired-count 1
+            echo "Run console"
+          elif [[ $solutionTypeValue == "web" ]]; then
+           
+            # ADD NEW AWS SERVICE
+
+            # create TARGET GROUP
+            echo "Add ecs target group $taskDefinitionArn"
+            targetGroupArn=`aws elbv2 create-target-group --region us-west-2 \
+              --cli-input-json file://awsclifiles/health-paht-target-group.json \
+              --name $targetGroupName --protocol HTTP --port 80 --target-type ip --vpc-id $vpc_id \
+              --query 'TargetGroups[0].TargetGroupArn' --output text`
+            echo "Target group added, arn: $targetGroupArn"
+
+            # create RULE for APPLICATION LOAD BALANCER             
+            echo "Get count application load balancer rule"
+            priorites=`aws elbv2 describe-rules --region us-west-2 \
+              --listener-arn $listener_arn \
+              --query 'Rules[*].Priority'`
+
+            echo "Priorites: $priorites"
+              
+            nextPriorityLevel=`echo "$priorites" | grep '[0-9]' | tail -1 | tr -d '",' | awk '{print $1 + 1}'`
+             
+            echo "Add application load balancer rule with priority: '$nextPriorityLevel'"
+            aws elbv2 create-rule --region us-west-2 \
+              --listener-arn $listener_arn \
+              --priority $nextPriorityLevel \
+              --actions Type=forward,TargetGroupArn=$targetGroupArn \
+              --conditions ' [{
+                  "Field": "host-header",
+                  "HostHeaderConfig": {
+                  "Values": ["'"$hostRoute53"'"]
+                  }
+                }] '
+             
+            # create AWS SERVICE
+            echo "Add ecs service: $taskDefinitionArn"
+             
+            aws ecs create-service --region us-west-2 --cluster $AWS_CLUSTER_NAME \
+              --service-name $ecsServiceName \
+              --task-definition $taskDefinitionArn \
+              --launch-type FARGATE \
+              --desired-count 1 \
+              --network-configuration $network_configuration \
+              --load-balancers ' [{
+                       "targetGroupArn": "'"$targetGroupArn"'",
+                       "containerName": "'"$containerImageName"'",
+                       "containerPort": 80
+                   }] '
+             
+            # create ROUT53 RECORD
+            echo "Add route 53 record with host: '$hostRoute53'"
+            aws route53 change-resource-record-sets --region us-west-2 --hosted-zone-id $route53_hosted_zone_id \
+               --change-batch ' {
+                        "Comment": "Creating Alias resource record sets in Route 53",
+                        "Changes": [{
+                                   "Action": "CREATE",
+                                   "ResourceRecordSet": {
+                                               "Name": "'"$hostRoute53"'",
+                                               "Type": "A",
+                                               "AliasTarget":{
+                                                       "HostedZoneId": "'"$elb_hosted_zone_id"'",
+                                                       "DNSName": "'"$dns_name"'",
+                                                       "EvaluateTargetHealth": false
+                                                 }}
+                                             }]
+                   } '
+           
+          else  
+             echo "Not suported type of solution: $solutionTypeValue"
+             exit code 1
+          fi
+           
+        fi
+         
+      done < ${PROJECTS_TO_BUILD}
+
+### SERVICE
+##############################################################
+service-build-test:
+  stage: service-build-test
+  image: gitlab-registry.nordstrom.com/cicd/gitlab-shared-runner/docker:stable
+  services:
+    - name: gitlab-registry.nordstrom.com/cicd/gitlab-shared-runner/docker:dind
+      alias: docker
+  tags:
+    - docker
+  script:
+    - sourceFolder=$(pwd)
+    - docker login $CI_REGISTRY -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
+    
+    - |
+       cat
+       while IFS= read -r line; do
+         echo "Build + test: $line"
+         cd "$sourceFolder"
+         cd "$line"
+         projectName=$(echo "$line" | awk -F"/" '{print $2}')
+         
+         base_image=gitlab-registry.nordstrom.com/inventorymanagement/themis:sonarqube-nordstrom-server
+         if DOCKER_CLI_EXPERIMENTAL=enabled docker manifest inspect $base_image >/dev/null; then
+            echo "use exists docker image"
+            docker build -t demo-test-sonarcube -f ../../DockerfileSonarqubeScanner \
+                --build-arg branch_name=$CI_COMMIT_BRANCH \
+                --build-arg SONAR_HOST_URL=$SONAR_HOST_URL --build-arg SONAR_TOKEN=$SONAR_TOKEN \
+                --build-arg SONAR_PROJECT_KEY=$projectName --build-arg nuget_server=http://10.16.14.206/nuget .
+         else
+            echo "Create/push new image"
+            docker build -t $base_image -f ../../DockerfileSonarqubeBaseScanner \
+                --build-arg branch_name=$CI_COMMIT_BRANCH \
+                --build-arg SONAR_HOST_URL=$SONAR_HOST_URL --build-arg SONAR_TOKEN=$SONAR_TOKEN \
+                --build-arg SONAR_PROJECT_KEY=$projectName --build-arg nuget_server=http://10.16.14.206/nuget .
+            docker push $base_image
+         fi
+         
+       done < ${PROJECTS_TO_BUILD}
+
+##############################################################
+create-ecr:
+  rules:
+    - if: $CI_MERGE_REQUEST_ID
+      when: never
+    - if: '$CI_COMMIT_BRANCH == $PRE_PROD_BRANCH_NAME || $CI_COMMIT_BRANCH == $DEV_BRANCH_NAME || $CI_COMMIT_BRANCH == $PROD_BRANCH_NAME'
+      when: always
+    - when: manual
+  stage: create-ecr
+  image: gitlab-registry.nordstrom.com/cicd/images/awscli
+  before_script:
+    - creds-helper -aws
+    - export AWS_PROFILE=${paramAwsProfile}
+  script:
+    - |
+        while IFS= read -r line; do
+         
+          settingName=alias
+          aws_solution_alias=$(echo "$(cat $line/aws_settings.json | grep $settingName: | awk -F $settingName: '{print $2 }' | awk -F , '{print $1 }')" | tr '[:upper:]' '[:lower:]' | tr -d '" ')
+          echo "aws_solution_alias: $aws_solution_alias"
+         
+          # create ECR 
+          aws ecr describe-repositories --repository-names imt-$aws_solution_alias --region us-west-2 || aws ecr create-repository --repository-name imt-$aws_solution_alias --region us-west-2
+          echo "Set up policy to ecr"
+          # set policy for available from prod account
+          aws ecr set-repository-policy --region us-west-2 \
+            --repository-name imt-$aws_solution_alias \
+            --policy-text '{
+              "Version" : "2008-10-17",
+              "Statement" : [
+                {
+                  "Sid" : "allow prod account pull",
+                  "Effect" : "Allow",
+                  "Principal" : {
+                    "AWS": "arn:aws:iam::238469686232:root"
+                  },
+                  "Action" : [
+                    "ecr:BatchCheckLayerAvailability",
+                    "ecr:BatchGetImage",
+                    "ecr:GetDownloadUrlForLayer"
+                  ]
+                }
+              ]
+            }'
+
+        done < ${PROJECTS_TO_BUILD}
+
+##############################################################
+build-push-docker-image:
+  stage: build-push-docker-image
+  image: gitlab-registry.nordstrom.com/cicd/gitlab-shared-runner/docker:stable
+  services:
+    - name: gitlab-registry.nordstrom.com/cicd/gitlab-shared-runner/docker:dind
+      alias: docker
+  tags:
+    - docker
+  script:
+    - docker login $CI_REGISTRY_IMAGE -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
+    - |
+      docker run --env NIU_App_ID=${NIU_App_ID} --env NIU_App_Secret=${NIU_App_Secret} --env AWS_PROFILE=${paramAwsProfile} --env AWS_DEFAULT_REGION=${paramAwsRegion} \
+      --name creds_helper gitlab-registry.nordstrom.com/cicd/images/awscli:v1.8 \
+      /bin/bash -c "creds-helper -aws; aws ecr get-login --no-include-email > ecr-login.txt"
+    - docker cp creds_helper:/home/nonroot/ecr-login.txt .
+    - docker rm creds_helper
+    - /bin/sh ecr-login.txt
+    
+    - sourceFolder=$(pwd)
+    - |
+       while IFS= read -r line; do
+         
+         settingName=alias
+         aws_solution_alias=$(echo "$(cat $line/aws_settings.json | grep $settingName: | awk -F $settingName: '{print $2 }' | awk -F , '{print $1 }')" | tr '[:upper:]' '[:lower:]' | tr -d '" ')
+         echo "aws_solution_alias: $aws_solution_alias"
+         
+         solutionName=$(echo "$line" | awk -F"/" '{print $2}')
+         echo "SolutionName: $solutionName"
+         dockerName=$(echo "$solutionName" | tr '[:upper:]' '[:lower:]' | tr '.' '-')
+         echo "dockerName: $dockerName"
+         
+         cd "$line"
+         docker build -f ../../Dockerfile -t $dockerName --build-arg proj_name=$solutionName --build-arg nuget_server=$NUGET_SERVER_URL_DEV .
+         cd "$sourceFolder"
+         
+         docker tag     $dockerName     $AWS_HOST/imt-$aws_solution_alias:$CI_COMMIT_SHORT_SHA
+         docker push    $AWS_HOST/imt-$aws_solution_alias:$CI_COMMIT_SHORT_SHA
+
+       done < ${PROJECTS_TO_BUILD}
+    
+create-aws-service-dev:
+  when: manual
+  stage: create-aws-service
+  image: gitlab-registry.nordstrom.com/cicd/images/awscli
+  before_script:
+    - creds-helper -aws
+    - export AWS_PROFILE=${paramAwsProfile}
+  script:
+    - |
+      echo "Deploy dev environment"
+      env_prefix=dev
+      DOTNET_ENVIRONMENT_value=Development
+      execution_role_arn=arn:aws:iam::217579517876:role/ecsTaskExecutionRole
+      network_configuration="awsvpcConfiguration={subnets=[subnet-02ce134a],securityGroups=[sg-a308ccde]}"
+      vpc_id=vpc-6b640b0d
+      listener_arn=$AWS_APPLICATION_BALANCER_LISTENER_ARN_DEV
+                   
+      elb_hosted_zone_id=Z1H1FL5HABSF5
+      dns_name=internal-imt-alb-652301611.us-west-2.elb.amazonaws.com
+      route53_dns=inv.nonprod.inventorymgmt.vip.nordstrom.com
+      route53_hosted_zone_id=Z3CDWVVNMGORDJ
+      is_add_alias_to_direct_link=true
+      memory_size=16384
+      cpu_size=4096
+
+      echo "env_prefix: $env_prefix"
+      echo "DOTNET_ENVIRONMENT_value: $DOTNET_ENVIRONMENT_value"
+      echo "execution_role_arn: $execution_role_arn"
+      echo "network_configuration: $network_configuration"
+      echo "vpc_id: $vpc_id"
+      echo "listener_arn: $listener_arn"
+      echo "elb_hosted_zone_id: $elb_hosted_zone_id"
+      echo "dns_name: $dns_name"
+      echo "route53_hosted_zone_id: $route53_hosted_zone_id"
+      echo "is_add_alias_to_direct_link: $is_add_alias_to_direct_link"
+
+    - echo "Run template"
+    - *create-update-services-template
+
+create-aws-service-pre-prod:
+  only:
+    refs:
+      - pre-production
+      - feature/ci-cd-test
+  when: manual
+  stage: create-aws-service
+  image: gitlab-registry.nordstrom.com/cicd/images/awscli
+  before_script:
+    - creds-helper -aws
+    - export AWS_PROFILE=${paramAwsProfile}
+  script:       
+    - |
+      echo "Deploy dev environment"
+      env_prefix='pre-prod'
+      DOTNET_ENVIRONMENT_value=Staging
+      execution_role_arn=arn:aws:iam::217579517876:role/ecsTaskExecutionRole
+      network_configuration="awsvpcConfiguration={subnets=[subnet-02ce134a],securityGroups=[sg-a308ccde]}"
+      vpc_id=vpc-6b640b0d
+      listener_arn=$AWS_APPLICATION_BALANCER_LISTENER_ARN_DEV
+      elb_hosted_zone_id=Z1H1FL5HABSF5
+      dns_name=internal-imt-alb-652301611.us-west-2.elb.amazonaws.com
+      route53_dns=inv.nonprod.inventorymgmt.vip.nordstrom.com
+      route53_hosted_zone_id=Z3CDWVVNMGORDJ
+      is_add_alias_to_direct_link=false
+      memory_size=16384
+      cpu_size=4096
+
+      echo "env_prefix: $env_prefix"
+      echo "DOTNET_ENVIRONMENT_value: $DOTNET_ENVIRONMENT_value"
+      echo "execution_role_arn: $execution_role_arn"
+      echo "network_configuration: $network_configuration"
+      echo "vpc_id: $vpc_id"
+      echo "listener_arn: $listener_arn"
+      echo "elb_hosted_zone_id: $elb_hosted_zone_id"
+      echo "dns_name: $dns_name"
+      echo "route53_hosted_zone_id: $route53_hosted_zone_id"
+      echo "route53_dns: $dnsroute53_dns_name"
+      echo "is_add_alias_to_direct_link: $is_add_alias_to_direct_link"
+
+    - echo "Run template"
+    - *create-update-services-template
+
+create-aws-service-prod:
+  only:
+    refs:
+      - production
+  when: manual      
+  stage: create-aws-service
+  image: gitlab-registry.nordstrom.com/cicd/images/awscli
+  before_script:
+    - creds-helper -aws
+    - export AWS_PROFILE=${paramProdAwsProfile}
+  script:       
+    - |
+      echo "Deploy prod environment"
+      env_prefix='prod'
+      DOTNET_ENVIRONMENT_value=Production
+      execution_role_arn=arn:aws:iam::238469686232:role/ecsTaskExecutionRole
+      network_configuration="awsvpcConfiguration={subnets=[subnet-b964d8df],securityGroups=[sg-5e16d223]}"
+      vpc_id=vpc-996906ff
+      listener_arn=arn:aws:elasticloadbalancing:us-west-2:238469686232:listener/app/imt-alb/fe216ac9624bcb4b/0a66d3fc56162ba7
+      elb_hosted_zone_id=Z1H1FL5HABSF5
+      dns_name=internal-imt-alb-1152880176.us-west-2.elb.amazonaws.com
+                      
+      route53_dns=inv.prod.inventorymgmt.vip.nordstrom.com
+      route53_hosted_zone_id=Z27VB78XLES94E
+      is_add_alias_to_direct_link=false
+      memory_size=16384
+      cpu_size=4096
+      
+      echo "env_prefix: $env_prefix"
+      echo "DOTNET_ENVIRONMENT_value: $DOTNET_ENVIRONMENT_value"
+      echo "execution_role_arn: $execution_role_arn"
+      echo "network_configuration: $network_configuration"
+      echo "vpc_id: $vpc_id"
+      echo "listener_arn: $listener_arn"
+      echo "elb_hosted_zone_id: $elb_hosted_zone_id"
+      echo "dns_name: $dns_name"
+      echo "route53_hosted_zone_id: $route53_hosted_zone_id"
+      echo "route53_dns: $route53_dns"
+      echo "is_add_alias_to_direct_link: $is_add_alias_to_direct_link"
+
+    - echo "Run template"
+    - *create-update-services-template   
+  
