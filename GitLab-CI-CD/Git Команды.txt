@@ -1,0 +1,13 @@
+﻿git diff remotes/origin/master --name-only --no-commit-id --pretty="" | awk -F"/" '{print $1"/"$2}' | sort | uniq
+
+git diff remotes/origin/master --name-only --no-commit-id --pretty="" 
+Команда для вывода данных по комиту 
+ --name-only                     Только имя 
+ --no-commit-id				     Без ИД комита
+ --pretty=""                     Формат вывода
+
+| awk -F"/" '{print $1"/"$2}' | sort | uniq
+ -F"/"                                        Устанавливает разделитель
+ '{print $1"/"$2}'							  Выводить строку в формате для 1 и 2 столбца
+ | sort									      Сортировать 
+ | uniq										  Уникальные записи
