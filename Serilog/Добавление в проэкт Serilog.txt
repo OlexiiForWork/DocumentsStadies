@@ -1,0 +1,29 @@
+1) Пакеты для Serilog
+
+Install-Package Serilog.AspNetCore -Version 4.0.1
+Install-Package Serilog.Settings.Configuration -Version 3.1.0
+
+2) Добавить в программ
+.UseSerilog((hostingContext, loggerConfiguration) => loggerConfiguration.ReadFrom.Configuration(hostingContext.Configuration));
+
+3) Добавить в конфиг 
+
+  "Serilog": {
+    "WriteTo": [
+      {
+        "Name": "Console"
+        //"Args": {
+        //  "theme": "Serilog.Sinks.SystemConsole.Themes.AnsiConsoleTheme::Code, Serilog.Sinks.Console",
+        //  "outputTemplate": "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} <s:{SourceContext}>{NewLine}{Exception}"
+        //}
+      },
+      {
+        "Name": "NewRelicLogs",
+        "Args": {
+          "applicationName": "imt-dev-auditctrlapi",
+          "licenseKey": "a9de9d1b5e703edd601b9cca4afaf72cFFFFNRAL"
+          //... other parameters
+        }
+      }
+    ]
+  },

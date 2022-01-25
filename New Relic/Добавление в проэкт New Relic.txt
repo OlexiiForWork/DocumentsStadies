@@ -1,0 +1,111 @@
+https://docs.newrelic.com/docs/agents/net-agent/install-guides/install-net-agent-using-nuget/
+
+1) Пакеты для NewRelic
+	Обезательный пакет(NewRelic.Agent): после его добавления сбилдить проект...
+	В папке \bin\Debug или \bin\Release появится папка (newrelic) c ею придется дальше работать 
+	
+Install-Package NewRelic.Agent -Version 8.41.0
+Опцыональный пакет:
+Install-Package NewRelic.Agent.Api -Version 8.41.0
+2)Блок переменых которые нужно добавить для Core.
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development",
+        "CORECLR_ENABLE_PROFILING": "1",
+        "CORECLR_PROFILER": "{36032161-FFC0-4B61-B559-F6C5D41BAE5A}",
+        "CORECLR_PROFILER_PATH": "C:\\P\\t\\Services\\Nordstrom.Inventory.Themis.AuditControllerApi\\Nordstrom.Inventory.Themis.AuditControllerApi\\bin\\Debug\\net5.0\\newrelic\\NewRelic.Profiler.dll",
+        "CORECLR_NEWRELIC_HOME": "C:\\P\\t\\Services\\Nordstrom.Inventory.Themis.AuditControllerApi\\Nordstrom.Inventory.Themis.AuditControllerApi\\bin\\Debug\\net5.0\\newrelic",
+        "NEW_RELIC_LICENSE_KEY": "a9de9d1b5e703edd601b9cca4afaf72cFFFFNRAL",
+        "NEW_RELIC_APP_NAME": "imt-dev-auditctrlapi"
+      }
+	  
+------	  
+
+3) Пример событий и как добавлять.
+       var eventAttributesNewRelic = new Dictionary<string, object>();
+
+       eventAttributesNewRelic.Add("LocationID", request.LocationID);
+       eventAttributesNewRelic.Add("audit_schema", request.AuditSchemaName);
+       eventAttributesNewRelic.Add("CorrelationID", request.CorrelationID);
+       eventAttributesNewRelic.Add("TransformRows", result);
+       eventAttributesNewRelic.Add("TransformRunTime", DateTime.UtcNow.DateTimeDiff(startTime));
+
+       NewRelic.Api.Agent.NewRelic.RecordCustomEvent("TransformSource"/*Имя события*/, eventAttributesNewRelic);
+
+       SELECT * FROM TransformSource/*Имя события*/ since 1 day ago
+
+4) События добавление в проекты
+	ExtractorService
+		ExtractorEvent
+			Атирибуты 
+			(Extractor_health:Extractor_StartTime:Extractor_StopTime:Extractor_WorkTime)
+		ExtractorSource
+			Атирибуты 
+			(LocationID:auditId:SourceName:SourceRows:InsertedRows:SourceRunTime)	
+		ExtractorEventError	
+			Атирибуты 
+			(Exception_Time:LocationID:SourceName)			
+			
+			
+	SELECT  count(Extractor_health) FROM ExtractorEvent  SINCE 1 DAY AGO	
+
+	SELECT  average(Extractor_health) FROM ExtractorEvent WHERE Extractor_WorkTime IS NOT NULL SINCE SINCE 1 DAY AGO	TIMESERIES	
+	
+	SELECT  average(Extractor_WorkTime) FROM ExtractorEvent WHERE Extractor_WorkTime IS NOT NULL SINCE 1 DAY AGO TIMESERIES	
+
+	
+	Transformer
+		TransformerEvent
+			Атирибуты 
+			(Transformer_health:Transformer_StartTime:Transformer_StopTime:Transformer_WorkTime)
+		TransformSource
+			Атирибуты 
+			(LocationID:audit_schema:CorrelationID:TransformRows:TransformRunTime)		
+		TransformerEventError
+			Атирибуты 
+			(LocationID:audit_schema:CorrelationID:TransformRows:TransformRunTime)		
+	SELECT  count(Transformer_health) FROM TransformerEvent  SINCE 3 DAY AGO TIMESERIES
+	
+    SELECT  average(Transformer_WorkTime) FROM TransformerEvent WHERE Transformer_WorkTime IS NOT NULL SINCE 1 DAY AGO TIMESERIES	
+
+
+	BusinessIntelligenceProcessor
+		ProcessorEvent
+			Атирибуты 
+			(Processor_health:Processor_StartTime:Processor_WorkTime:Processor_StopTime)
+		ProcessorSource
+			Атирибуты 
+			(LocationID:auditId:CorrelationID:CorrelationID:ProcessorRows:ProcessorRunTime)
+		ProcessorEventError	
+			Атирибуты 
+			(Exception)			
+			
+	SELECT  count(Processor_health) FROM ProcessorEvent  SINCE 3 DAY AGO TIMESERIES		
+	
+	SELECT  average(Processor_WorkTime) FROM ProcessorEvent WHERE Processor_WorkTime IS NOT NULL SINCE 1 DAY AGO TIMESERIES	
+	
+	SELECT  count(Exception) FROM ProcessorEventError SINCE 1 DAY AGO TIMESERIES	
+
+----------------	
+	SELECT * FROM Transaction WHERE appName = 'imt-dev-auditctrlapi' SINCE 7 DAYS AGO TIMESERIES
+			
+
+SELECT * FROM Transaction WHERE (entityGuid = 'MjY4NTc2MXxBUE18QVBQTElDQVRJT058MTU1Njg0NjkxMg') AND (name = 'WebTransaction/Custom/InventoryThemisTransaction') SINCE 604800 seconds AGO	  
+
+SELECT `LocationId` , `ProcessId`, `StartTime`
+ FROM Transaction WHERE (entityGuid = 'MjY4NTc2MXxBUE18QVBQTElDQVRJT058MTU1Njg0NjkxMg') AND (name = 'WebTransaction/Custom/InventoryThemisTransaction') SINCE 604800 seconds AGO
+ 
+ SELECT `LocationId` , `ProcessId`, `StartTime`
+ FROM Transaction WHERE (entityGuid = 'MjY4NTc2MXxBUE18QVBQTElDQVRJT058MTU1Njg0NjkxMg')  SINCE 604800 seconds AGO
+ 
+ SELECT `LocationId` , `ProcessId`, `StartTime`, entityGuid
+ FROM Transaction WHERE (entityGuid = 'MjY4NTc2MXxBUE18QVBQTElDQVRJT058MTU1Njg0NjkxMg' or entityGuid = 'MjY4NTc2MXxBUE18QVBQTElDQVRJT058MTU1OTE2MjA2NQ')  SINCE 604800 seconds AGO
+ 
+ SELECT * FROM Metric WHERE (entity.guid = 'MjY4NTc2MXxBUE18QVBQTElDQVRJT058MTU1OTE2MjA2NQ' or entity.guid = 'MjY4NTc2MXxBUE18QVBQTElDQVRJT058MTU1Njg0NjkxMg') SINCE 604800 seconds AGO
+ 
+ 
+ SELECT  host ,appName,Attribute_StartTime1, Attribute_StartTime,Attribute_Test,Attribute_Test1 from TestEvent  since 1 day ago TIMESERIES
+ 
+ 
+  SELECT average(Attribute_StartTime) from TestEvent  since 1 day ago TIMESERIES
+ 
+ 

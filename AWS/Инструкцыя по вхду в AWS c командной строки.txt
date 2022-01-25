@@ -1,0 +1,22 @@
+Для работы необходим AWS Cli и AWS-Okta
+
+1)Проверка AWS-Okta
+aws-okta login
+--Сылка для скачивания начала работы/настройки 
+https://confluence.nordstrom.com/display/PubCloud/AWS-Okta
+
+2)Получение соответствующих разрешений для работы в  AWS
+aws-okta creds
+
+3)C помощью AWS Cli пушым образ...
+Логин в AWS
+aws ecr get-login-password --region us-west-2 --profile nordstrom-federated | docker login --username AWS --password-stdin 217579517876.dkr.ecr.us-west-2.amazonaws.com
+
+сборка образа
+docker build -t web_test .
+
+назначение тегов для AWS образа 
+docker tag web_test2:latest 217579517876.dkr.ecr.us-west-2.amazonaws.com/demo:v1
+отправка на сервер...
+
+docker push 217579517876.dkr.ecr.us-west-2.amazonaws.com/demo:v1

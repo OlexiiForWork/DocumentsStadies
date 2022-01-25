@@ -1,0 +1,40 @@
+docker build 
+-f "C:\DeckerTest\ConsoleApp1\WebApplication1\Dockerfile" 
+--force-rm 
+-t webapplication1:dev 
+--target base  
+--label "com.microsoft.created-by=visual-studio" 
+--label "com.microsoft.visual-studio.project-name=WebApplication1" "C:\DeckerTest\ConsoleApp1" 
+
+
+docker build -f "C:\DeckerTest\ConsoleApp1\WebApplication1\Dockerfile" --force-rm -t webapplication1:dev --target base --label "com.microsoft.created-by=visual-studio" --label "com.microsoft.visual-studio.project-name=WebApplication1" "C:\DeckerTest\ConsoleApp1" 
+
+docker build -f "C:\DeckerTest\ConsoleApp1\WebApplication1\Dockerfile" -t web_test --label "com.microsoft.created-by=visual-studio" --label "com.microsoft.visual-studio.project-name=WebApplication1" "C:\DeckerTest\ConsoleApp1" 
+
+--------------------------------------------------------------
+docker run -dt 
+-v "C:\Users\Oleksii_Shevtsov1\vsdbg\vs2017u5:/remote_debugger:rw" 
+-v "C:\DeckerTest\ConsoleApp1\WebApplication1:/app" 
+-v "C:\DeckerTest\ConsoleApp1:/src/" 
+-v "C:\Users\Oleksii_Shevtsov1\AppData\Roaming\Microsoft\UserSecrets:/root/.microsoft/usersecrets:ro" 
+-v "C:\Users\Oleksii_Shevtsov1\AppData\Roaming\ASP.NET\Https:/root/.aspnet/https:ro" 
+-v "C:\Users\Oleksii_Shevtsov1\.nuget\packages\:/root/.nuget/fallbackpackages" 
+-e "DOTNET_USE_POLLING_FILE_WATCHER=1" 
+-e "ASPNETCORE_LOGGING__CONSOLE__DISABLECOLORS=true" 
+-e "ASPNETCORE_ENVIRONMENT=Development" 
+-e "ASPNETCORE_URLS=https://+:443;http://+:80" 
+-e "NUGET_PACKAGES=/root/.nuget/fallbackpackages" 
+-e "NUGET_FALLBACK_PACKAGES=/root/.nuget/fallbackpackages" 
+-P --name WebApplication1 
+--entrypoint tail webapplication1:dev -f /dev/null 
+
+
+docker run -d -e "DOTNET_USE_POLLING_FILE_WATCHER=1" -e "ASPNETCORE_LOGGING__CONSOLE__DISABLECOLORS=true" -e "ASPNETCORE_ENVIRONMENT=Development" -e "ASPNETCORE_URLS=https://+:443;http://+:80" -e "NUGET_PACKAGES=/root/.nuget/fallbackpackages" -e "NUGET_FALLBACK_PACKAGES=/root/.nuget/fallbackpackages" -P --name WebApplication1 --entrypoint tail webapplication1:dev
+docker run -d -e "DOTNET_USE_POLLING_FILE_WATCHER=1" -e "ASPNETCORE_LOGGING__CONSOLE__DISABLECOLORS=true" -e "ASPNETCORE_ENVIRONMENT=Development" -e "ASPNETCORE_URLS=https://+:443;http://+:80" -e "NUGET_PACKAGES=/root/.nuget/fallbackpackages" -e "NUGET_FALLBACK_PACKAGES=/root/.nuget/fallbackpackages" -p 7080:80 -p 7443:443 --name myapp3 webapplication1:dev
+docker run -d -e "DOTNET_USE_POLLING_FILE_WATCHER=1" -e "ASPNETCORE_LOGGING__CONSOLE__DISABLECOLORS=true" -e "ASPNETCORE_ENVIRONMENT=Development" -e "ASPNETCORE_URLS=http://+:80" -e "NUGET_PACKAGES=/root/.nuget/fallbackpackages" -e "NUGET_FALLBACK_PACKAGES=/root/.nuget/fallbackpackages" -p 9080:80 --name myapp1 web_test
+
+
+http://localhost:9080/swagger/index.html
+http://54.186.113.34/swagger/index.html
+
+http://54.186.113.34/WeatherForecast
