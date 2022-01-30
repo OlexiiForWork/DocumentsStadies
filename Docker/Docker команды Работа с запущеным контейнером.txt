@@ -1,0 +1,22 @@
+﻿Получаем запущенные контейнеры:
+|
+----docker ps
+
+Соединяемся и запускаем баш:
+|
+----docker exec -it {Container-ID} /bin/bash
+
+Для того, чтобы скопировать файлы из локальной машины в докер контейнер нужно воспользоваться:
+|
+----docker cp путь_на_локальной_машине имя_контейнера:путь_в_контейнере
+
+Для обратного процесса выполняем команду:
+|
+----docker cp имя_контейнера:путь_в_контейнере путь_на_локальной_машине
+
+docker cp C:\P\t\AirFlow\dags\themis-config-audit-id_1.py ce9e7c893a57:/usr/local/airflow/dags
+
+
+docker build . --build-arg PYTHON_BASE_IMAGE="python:3.7-slim-buster" --build-arg AIRFLOW_INSTALLATION_METHOD="https://github.com/apache/airflow/archive/main.tar.gz#egg=apache-airflow" --build-arg AIRFLOW_CONSTRAINTS_REFERENCE="constraints-main" --tag "my-github-main:0.0.1"
+$ docker run   -p 8080:8080 apache/airflow
+docker run -d -p 8080:8080 apache/airflow webserver

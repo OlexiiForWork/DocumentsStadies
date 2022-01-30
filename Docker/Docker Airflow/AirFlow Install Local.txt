@@ -1,0 +1,19 @@
+﻿Необходимые компоненты
+Docker
+Cocker-Compouse
+Visual Studio Code
+
+Инструкцыя для терминала
+
+## 1 - команды терминала для проверки 
+docker --version
+docker-compose --version
+
+## 2 - команды терминала для создания папки и загркзки/установки  docker-compose файла
+
+mkdir airflow-docker				# Создание папки airflow-docker
+cd airflow-docker                   # Переход в папку airflow-docker
+
+#загрузка в airflow-docker файла docker-compose.yaml
+curl -LfO 'https://airflow.apache.org/docs/apache-airflow/stable/docker-compose.yaml' можно сделать  в ручную если не работает
+curl -LfO 'https://airflow.apache.org/docs/apache-airflow/2.0.2/docker-compose.yaml'

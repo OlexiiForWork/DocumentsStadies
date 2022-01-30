@@ -12,3 +12,5 @@ $ docker volume create pgdata
  --rm                          Automatically remove the container when it exits
 $ docker run -it --rm -v pgdata:/var/lib/postgresql/data -e POSTGRES_PASSWORD=oleksii -e POSTGRES_USER=oleksii -e POSTGRES_DB=postgres -p 5433:5432 postgres:12.8
 $ docker run -it --restart=always -v pgdata:/var/lib/postgresql/data -e POSTGRES_PASSWORD=oleksii -e POSTGRES_USER=oleksii -e POSTGRES_DB=postgres -p 5433:5432 postgres:12.8
+
+

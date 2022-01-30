@@ -1,0 +1,62 @@
+﻿## Контейнеры !!!!!!!!!!!!!!!!!!!!!!!
+
+Получаем запущенные контейнеры:
+|
+----docker ps
+----docker ps -a
+
+Удаление работающего контейнера
+|
+----docker rm <Container Name>
+
+Удаление всех остановленных контейнеров
+|
+----docker container prune
+----docker rm `docker ps -a -q`
+
+Удаление всех остановленных контейнеров
+|
+----docker container prune --filter "until=24h"
+
+Логи контейнера
+|
+----docker logs <Container Name>
+
+События контейнера
+|
+----docker events <Container Name>
+
+Публичные порты
+|
+----docker port <Container Name>
+
+Выполняющиеся процессы
+|
+----docker top <Container Name>
+
+Использование ресурсов
+|
+----docker stats <Container Name>
+
+
+## Образы !!!!!!!!!!!!!!!!!!!!!!!
+Список образов
+|
+----docker images
+
+Удаление образа
+|
+----docker rmi  <Image Name>
+
+Удаление неиспользуемых (dangling) образов
+|
+----docker image prune
+----docker rmi $(docker images -f dangling=true -q)
+
+Удаление неиспользуемых (dangling) образов даже с тегами
+|
+----docker image prune -a
+
+Удаление всех образов
+|
+----docker rmi $(docker images -a -q)
