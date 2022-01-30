@@ -17,3 +17,22 @@ cd airflow-docker                   # Переход в папку airflow-docke
 #загрузка в airflow-docker файла docker-compose.yaml
 curl -LfO 'https://airflow.apache.org/docs/apache-airflow/stable/docker-compose.yaml' можно сделать  в ручную если не работает
 curl -LfO 'https://airflow.apache.org/docs/apache-airflow/2.0.2/docker-compose.yaml'
+
+mkdir ./dags ./plugins ./logs       # Создание папки airflow-docker
+
+mkdir dags 
+mkdir plugins 
+mkdir logs
+
+## 3 -  Команда для Получения одних и тех же прав В Docker conteiner и Host (MacOS/ Linuks)
+echo -e "AIRFLOW_UID=$(id -u)\nAIRFLOW_GID=0" > .env
+
+## 3 -  Команда для начала установки 
+!!!!   1 - Шаг
+docker-compose up airflow-init   - проинициализировать дефолтных пользователей
+
+		docker exec {Container-ID} airflow version               --проверка верси airflow
+
+!!!!   2 - Шаг
+docker-compose down - остановить все элементы 
+docker-compose down && docker-compose up- Рестартонуть все элементы 
