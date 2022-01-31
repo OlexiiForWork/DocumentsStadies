@@ -1,6 +1,6 @@
 ﻿Необходимые компоненты
 Docker
-Cocker-Compouse
+Docker-Compouse
 Visual Studio Code
 
 Инструкцыя для терминала
@@ -36,3 +36,8 @@ docker-compose up airflow-init   - проинициализировать деф
 !!!!   2 - Шаг
 docker-compose down - остановить все элементы 
 docker-compose down && docker-compose up- Рестартонуть все элементы 
+
+!!!!   3 - Для работы с АPI
+AIRFLOW__API__AUTH_BACKEND: 'airflow.api.auth.backend.basic_auth'
+
+curl -X GET --user "airflow:airflow" "http://localhost:8080/api/v1/dags"
