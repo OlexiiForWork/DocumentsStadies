@@ -1,4 +1,4 @@
-﻿## Команды Nuget !!!!!!!!!!!!!!!!!!!!!!!
+﻿## Команды Nuget !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Заходим в директорию с проектом
 1)	Создать директорию 
 	mkdir nupkgs
@@ -19,3 +19,15 @@
 				  |    |				 ---- репозиторий пушым														---- ключь с паролем
 				  |    ---- имя файла
 				  ----Команда push в репозиторий
+
+## Для добавления источника Nuget сервера для использования !!!!!!!!!!!!!!!!!!!!!!!!!
+1)dotnet nuget add source https://artifactory.nordstrom.com/artifactory/api/v3/nuget/nuget           // api для сервера
+                 --name Artifactory																   // Имя для сервера					
+				 --username oleksii.shevtsov													   // Под каким именем подключаемся
+				 --password AKCp8krKqRAA7QLivvNEgcYYjszcfKZ7M8SciJTMsNW3mB6JbkqCR9A4BUg5Am9bxGHfYkFEK  // Пароль.....
+
+если работаем с Visual Studio 
+Добавьте следующую строку в файл NuGet.config:
+Файл NuGet.config можно найти в папке %appdata%\NuGet\NuGet.config (Windows) или ~/.config/NuGet/NuGet.config (Mac/Linux).
+	Строка добавления 
+		<add key="Artifactory" value="https://artifactory.nordstrom.com/artifactory/api/nuget/v3/nuget" protocolVersion="3" />
