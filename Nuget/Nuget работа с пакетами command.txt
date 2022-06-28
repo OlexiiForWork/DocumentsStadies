@@ -1,0 +1,21 @@
+﻿## Команды Nuget !!!!!!!!!!!!!!!!!!!!!!!
+Заходим в директорию с проектом
+1)	Создать директорию 
+	mkdir nupkgs
+	|
+	----Команда для создания
+2)  Сгенерировать файл *.nupkg для записи на сервер
+	dotnet pack --output nupkgs 
+			|    |
+			|    ---- Указание куда генерим файл
+			----Команда для запаковки
+
+3)	Переходим в директорию с файлом *.nupkg
+	cd nupkgs
+
+4)  Команда для push Nuget файла в нугет репозиторий 
+	dotnet nuget push test.2.0.0.nupkg --source https://artifactory.nordstrom.com/artifactory/api/nuget/nuget --api-key userName:password
+				  |    |                 |																			|				
+				  |    |				 ---- репозиторий пушым														---- ключь с паролем
+				  |    ---- имя файла
+				  ----Команда push в репозиторий
