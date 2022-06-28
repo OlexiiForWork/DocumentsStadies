@@ -1,0 +1,63 @@
+﻿1) Установить IntelliJ IDEA
+2) Установить JAVA 11.0.2
+     - Добавить переменую JAVA_HOME указывающую на JAVA 11.0.2
+     - Добавить сылку на переменую "%JAVA_HOME%/bin" в переменую Path
+3) Установить MAVEN 11.0.2
+     - Добавить переменую JAVA_HOME указывающую на JAVA 11.0.2
+     - Добавить сылку на переменую "%MAVEN_HOME%/bin" в переменую Path
+
+
+НАСТРОЙКА ЗАПУСКА БИЛДА И ЗАПУСКА ПРОЭКТА
+
+1) Добавить конфигурацыю для запуска проэкта.
+    -Add New Configuration
+        - Application
+        Name: App
+        Bild and Run:
+        1. JAVA 11 
+        2. -cp spectrum
+        3. com.nordstrom.minv.event.payload.Application
+        4. -Dspring.profiles.active=local
+        
+        Worcking directory: <repository in local>
+        Environment variables: ENV_SHORT_NAME=dev
+
+2) Настройки проэкта выбрать JAVA 11 SDK
+
+3) В файле <C:\P\>Spectrum\app\src\main\resources\application.yml
+
+  Закоментировать строки
+    #ssl:
+    #  key-store: /var/secrets/resources/runway-server-ssl.jks
+    #  key-store-password: ENC(OYVCPDHMO5iNionyaZtDnAmGLV335Og4yRMlvt9lK0Bc20wqA8DvFd/d356is7r9)
+
+  Поменять параметр truststore 
+    ssl:
+    truststore: C:/Nordstrom/nordstrom_valut/nordstromtrust.jks
+    truststorepassword: YgUJ5aMNjYpGvVK66XxW9+KfRqoiNOl6L5HLxXHiebE=
+
+4) В файле <C:\P\>Spectrum\app\src\main\resources\application-dev.yml
+В блоке указать подключение для локальной БД
+spring:
+  datasource:
+    username: postgres
+    #ies_reporting_user_dev
+    password: oleksii
+    #ENC(GZKR8iILk4tqwm6EjKyFLyeUcXb6UMK1FZdFCspdtNG3T75cn5zSzanrjJ+PAwii)
+    url: jdbc:postgresql://localhost:5432/spectrum
+    #jdbc:postgresql://merch-inv-cost-audit-db-writer.nonprod.inventorymgmt.vip.nordstrom.com:5432/merch_inv_ies_reporting_dev
+    driver-class-name: org.postgresql.Driver
+
+Настройка доступа для MAVEN 
+   В папку  ..\Java\jdk-11.0.2\lib\security  скопировать nordstromtrust.jks
+   Изменить имя файла nordstromtrust.jks на cacerts
+
+Настройка MAVEN после запуска 
+   команды: mvn clean install -U   
+   скопировать в созданую папку <C:\Users\Oleksii_Shevtsov1>\.m2 файл settings.xml 
+   
+   settings.xml - получается при генирацыи после 
+   работы с сылкой https://artifactory.nordstrom.com/artifactory/maven/com/nordstrom/merch/commons/service-parent/5.9.0-SNAPSHOT/maven-metada.xml
+   !!! работать лучше через Google Chrome
+
+!!!!!!   Не завершено   !!!!!!
