@@ -1,0 +1,7 @@
+﻿1. Download MSYS2 from https://www.msys2.org/
+
+2. После установки MSYS2 открыть MSYS2 терминал. Далее работа в этом окне.
+3. Команды установки MINGW64    
+   pacman -Syuu
+   pacman -S mingw-w64-x86_64-toolchain
+   pacman -S mingw-w64-x86_64-gsl
