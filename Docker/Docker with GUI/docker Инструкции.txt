@@ -1,0 +1,14 @@
+﻿1) Для сборки образа и подключения через RDP нужно будет откыть порт 3389
+
+docker build -f ./Dockerfile-xrdp.lubuntu -t docker-xrdp.lubuntu .
+docker build -f ./Dockerfile-xrdp.ubuntu -t docker-xrdp.ubuntu .
+
+2) Далее через Docker GUI запускаем имидж и устанавливаем 3389 порт и 
+подключаемся через RDP к localhost user который установлен в докер файле
+!!!! НАВЕРНОЕ НУЖНО ЧТО-ТО ДРУГОЕ
+
+
+-----------------------------------------
+Для работы через X server
+docker build -f ./Dockerfile.lubuntu -t docker-lubuntu .
+docker build -f ./Dockerfile-ubuntu -t docker-ubuntu .
