@@ -1,0 +1,66 @@
+﻿1) Для работы с Angular и ReactJS нужно установить NodeJs... 
+
+	1.1) Это будет нужно для ReactJS
+	Нужно скачать node ... и установить данный сервис. 
+	
+
+	!!!! Для проверки установленого Node для React
+		node --version
+		npx --version
+		npm --version
+
+   1.2) Это будет нужно для Angular
+   Нужно скачать node ... и установить данный сервис. 
+   !!! Проверка
+   		node --version
+		npm --version
+		ng version
+   Это будет нужно для Angular CLI
+	    
+		npm install -g @angular/cli
+		|
+		Данная команда установит пакет @angular/cli в качестве глобального модуля, 
+		поэтому в последующем при создании новый проектов Angular его не 
+		потребуется устанавливать заново.
+
+
+2) Создание проекта
+   2.1) Создание проекта React
+			npx create-react-app <Имя проэкта/папки>
+			 |
+			Должно скачать дефолтный проэкты и подготовить для изминений...
+
+
+
+   2.2) Создание проекта Angular
+
+3) Базовые команды
+   3.1) Для React
+    Старт сервера проэкта...
+		npm run start 
+		npm start
+		node start
+
+	Установка компонента в React проэкта.
+		npm install react-scripts@latest
+	Установка компонента в React проэкта c добавлением в json file.
+		npm i -D webpack-hot-middleware
+    Установка всех компонентов в React проэкта.
+		npm i
+		npm install
+
+   3.2) Для Angular
+    Старт сервера проэкта...
+		ng serve
+		ng serve --open
+
+		npm run ng serve
+		npm run ng serve --open
+
+	Установка компонента в React проэкта.
+		npm install react-scripts@latest
+	Установка компонента в React проэкта c добавлением в json file.
+		npm i -D webpack-hot-middleware
+    Установка всех компонентов в React проэкта.
+		npm i
+		npm install
