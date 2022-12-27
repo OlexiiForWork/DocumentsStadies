@@ -67,3 +67,43 @@
     Установка всех компонентов в React проэкта.
 		npm i
 		npm install
+
+    ng serve 
+	|
+	запускает Webpack, который в свою очередь собирает файлы вашего
+	проекта и переносит их в оперативную память вашего компьютера.
+	Если вы замените какой-то файл, то он заново будет пересобирать ваш проект.
+
+	ng serve --prod 
+	|
+	также запустит Webpack, но уже будет оптимизировать ваш проект. 
+	Таким образом можно уменьшить размер проекта от одной до нескольких сотен килобайт.
+	В нашем случае на ~ 130 кб.
+
+	ng build 
+	|
+	собирает все ваши файлы проекта и переносит их в папку dist. 
+	Далее вы можете делать с ними все что угодно — например, залить куда-нибудь на хостинг.
+	!!!!! При ng serve мы ни как не можем пощупать собранные файлы.
+
+	ng build --prod 
+	|
+	оптимизирует файлы, больше ничем не отличается.
+
+	ng generate [spec_file] [name] 
+	ng g [spec_file] [name] 
+	|
+	создает [spec_file] с названием [name] и автоматически добавляет(производит import) его в модуль.
+	-----------------------------------------
+	[spec_file]     |    [name] 
+	----------------------------------------
+	Component	    |	 ng g component name
+	Service		    |	 ng g service name
+	Module		    |	 ng g module name
+	Pipe		    |	 ng g pipe name
+	Class		    |	 ng g class name
+	Guard		    |	 ng g guard name
+	Interface	    |	 ng g interface name
+	Enum		    |	 ng g enum name
+	Directive	    |    ng g directive name
+	Routing module  |	 ng g module name --routing
