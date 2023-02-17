@@ -1,0 +1,34 @@
+﻿Использования расшырения pg_partman в Postgress DB  AWS::S3
+Работать будет с версии Postgress 12.6
+
+1) В БД добавить расшырение pg_partman...
+нужно быть за логиненным под rds_superuser
+
+CREATE SCHEMA partman;
+
+CREATE EXTENSION pg_partman WITH SCHEMA partman;
+
+2) В БД добавить расшырение aws_s3
+CREATE EXTENSION aws_s3 CASCADE;
+GRANT USAGE ON SCHEMA aws_s3 TO <archive_user>;
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA aws_s3 TO <archive_user>;
+
+3) Для темиса добавить схему и добавить подготовительные процедуры
+CREATE SCHEMA maintenance;
+GRANT USAGE ON SCHEMA aws_s3 TO <archive_user>;
+
+
+!!! Работа с функцыями Честера
+
+(Безопаснные)
+Получить список таблиц схемы и их размера.
+Чтобы выбрать таблицу для архива....
+select * from maintenance.get_tables_by_schema('data_mart');
+
+(Безопаснные)
+Получить список столбцов в таблице по которым может быть выполнено поцыонирование данных.
+select * from maintenance.get_partition_column('partitioned_table');
+
+
+maintenance.archive_aged_data(v_app_name, v_schema, v_table_name, v_archive)  нет в процедурах... 
+используется в maintenance.perform_maintenance
