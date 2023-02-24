@@ -1,0 +1,43 @@
+﻿kubectl version                            -- получение даных клиента и сервера
+
+
+!!!!! Работа с файлом "config"
+kubectl config get-contexts                -- получение список контекстов подключения
+
+kubectl config use-context docker-desktop  -- использовать контекст подключения "docker-desktop"
+
+kubectl get — вывод списка ресурсов
+kubectl describe — вывод подробной информации о ресурсе
+kubectl logs — вывод логов контейнера в поде
+kubectl exec — выполнение команды в контейнере пода
+
+!!!!Дальше смотрим основные ресурсы нашего кластера:
+kubectl cluster-info (обращаем внимание на ip-адрес, порт, состояние корднс в кластере)
+kubectl get cs -A (получаем статус основых компонентов k8s)
+
+!!!!!Оценим состояние наших нод и подов, их статус. Выполним команды:
+kubectl get nodes -A -owide
+kubectl get pods -owide
+
+!!!!Посмотрим на события в кластере за последний час:
+kubectl get events -owide
+
+kubectl get nodes                          -- получение список нодов
+kubectl get pods                           -- получение список подсов
+kubectl get pods pod1
+kubectl get deployment
+kubectl get ing                            -- получение списока открытых сервисов доступных из вне
+
+kubectl delete pod --selector="app!=sql-data" -- остановить кластер (перезапустить кластер)
+
+kubectl patch * * *  *                     -- изминение группы параметров
+kubectl patch cm cfg-eshop-webmvc --type strategic --patch @'
+data:
+  urls__IdentityUrl: http://10.0.75.1/identity
+  urls__mvc: http://10.0.75.1/webmvc
+'@
+
+kubectl patch cm cfg-eshop-identity-api --type strategic --patch @'
+data:
+  mvc_e: http://10.0.75.1/webmvc
+'@
