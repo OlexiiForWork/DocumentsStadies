@@ -19,3 +19,7 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.0-b
 kubectl -n kubernetes-dashboard create token admin-user
 
 после копирования токена получаем доступ к дашборду
+
+Удалите учетную запись администратора ServiceAccount и ClusterRoleBinding.
+kubectl -n kubernetes-dashboard delete serviceaccount admin-user
+kubectl -n kubernetes-dashboard delete clusterrolebinding admin-user
