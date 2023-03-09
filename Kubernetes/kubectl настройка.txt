@@ -11,15 +11,15 @@ kubectl config use-context docker-desktop  -- использовать конт�
 kubectl proxy                              -- закрывать командную строку не стоит пока работаешь.
  http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/(дефолтный путь)
 
-Настройка для работы с lf
+!!!Настройка для работы с kubernetes-dashboard
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.0-beta6/aio/deploy/recommended.yaml
 
 
-Создание admin-user подключеного к kubernetes-dashboard
+!!!Создание admin-user подключеного к kubernetes-dashboard
 kubectl -n kubernetes-dashboard create token admin-user
 
 после копирования токена получаем доступ к дашборду
 
-Удалите учетную запись администратора ServiceAccount и ClusterRoleBinding.
+!!!Удалите учетную запись администратора ServiceAccount и ClusterRoleBinding.
 kubectl -n kubernetes-dashboard delete serviceaccount admin-user
 kubectl -n kubernetes-dashboard delete clusterrolebinding admin-user
