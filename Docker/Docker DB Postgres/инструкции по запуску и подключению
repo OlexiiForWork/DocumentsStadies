@@ -1,0 +1,5 @@
+﻿docker-compose build    собрать      сервисы docker-compose.yaml
+docker-compose up       запустить    сервисы docker-compose.yaml
+docker-compose down     Остановить   сервисы docker-compose.yaml
+
+Для подключения локально вместо localhost нужно использовать host.docker.internal

@@ -28,6 +28,9 @@ kubectl get pods pod1
 kubectl get deployment
 kubectl get ing                            -- получение списока открытых сервисов доступных из вне
 
+kubectl apply -f .\local-cm.yaml           -- создания в кластере чегото что-то типа докер файла.
+
+
 kubectl delete pod --selector="app!=sql-data" -- остановить кластер (перезапустить кластер)
 
 kubectl patch * * *  *                     -- изминение группы параметров

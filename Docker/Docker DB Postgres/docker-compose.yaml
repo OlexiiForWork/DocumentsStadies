@@ -1,0 +1,22 @@
+version: '3'
+
+services:
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: oleksii
+      POSTGRES_PASSWORD: oleksii
+      POSTGRES_DB: postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres-db-volume:/var/lib/postgresql/data
+    #healthcheck:
+    #  test: ["CMD", "pg_isready", "-U", "oleksii"]
+    #  interval: 5s
+    #  retries: 5
+    restart: always
+
+volumes:
+  postgres-db-volume:
+ 
