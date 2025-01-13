@@ -1,5 +1,20 @@
-﻿docker-compose build    собрать      сервисы docker-compose.yaml
+docker-compose build    собрать      сервисы docker-compose.yaml
 docker-compose up       запустить    сервисы docker-compose.yaml
+docker-compose up -d	запустить без вывода сообщений
 docker-compose down     Остановить   сервисы docker-compose.yaml
 
-Для подключения локально вместо localhost нужно использовать host.docker.internal
+
+
+Для подключения локально вместо localhost нужно использовать host.docker.internal (Не факт)
+
+
+<.................> 
+для Windows только так
+    volumes:
+      - pgdata:/var/lib/postgresql/data/pgdata
+для Linux можгл сослаться на конкректную папку
+<.................> 
+volumes:
+  pgdata:
+    driver: local
+		
