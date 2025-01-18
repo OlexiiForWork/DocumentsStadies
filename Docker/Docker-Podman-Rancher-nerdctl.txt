@@ -1,1 +1,8 @@
+Програмы замениетели 
+nerdctl 
+Rancher Desktop
+Podman Desktop
+Docker Desktop
 
+nerdctl + Rancher Desktop - заменяет Docker
+Podman - заменяет Docker только нужно вместо Docker набирать Podman
